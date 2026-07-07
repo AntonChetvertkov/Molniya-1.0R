@@ -2,15 +2,19 @@
 #include <Wire.h>
 int DEBUG = 1;
 
-//imu defines
+//imu
 #include "FastIMU.h"
 #define IMU_ADDRESS 0x68
 #define PERFORM_CALIBRATION
 MPU6500 IMU;
 
-//bmp defines
+//bmp
 #include <Adafruit_BMP280.h>
 Adafruit_BMP280 bmp;
+
+//ms
+#include <MS5611.h>
+MS5611 ms(0x77);
 
 //calibration datasets
 calData calib = { 0 };
@@ -28,7 +32,6 @@ void setup() {
 
   if (!DEBUG){
     Serial.println("FastIMU calibration & data example");
-    delay(5000);
     Serial.println("Keep IMU level.");
     delay(5000);
     IMU.calibrateAccelGyro(&calib);
@@ -51,43 +54,54 @@ void setup() {
 
   //bmp
   bmp.begin(0x76);
-
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
               Adafruit_BMP280::SAMPLING_X2,
               Adafruit_BMP280::SAMPLING_X16,
-              Adafruit_BMP280::FILTER_X16,
+              Adafruit_BMP280::FILTER_X2,
               Adafruit_BMP280::STANDBY_MS_500);
+  
+  //ms
+  ms.begin();
 }
 
 void loop() {
   IMU.update();
   IMU.getAccel(&accelData);
-  Serial.print(accelData.accelX);
-  Serial.print("\t");
-  Serial.print(accelData.accelY);
-  Serial.print("\t");
-  Serial.print(accelData.accelZ);
-  Serial.print("\t");
+  Serial.print(">accelX:");
+  Serial.println(accelData.accelX);
+  Serial.print(">accelY:");
+  Serial.println(accelData.accelY);
+  Serial.print(">accelZ:");
+  Serial.println(accelData.accelZ);
   IMU.getGyro(&gyroData);
-  Serial.print(gyroData.gyroX);
-  Serial.print("\t");
-  Serial.print(gyroData.gyroY);
-  Serial.print("\t");
-  Serial.print(gyroData.gyroZ);
+  Serial.print(">gyroX:");
+  Serial.println(gyroData.gyroX);
+  Serial.print(">gyroY:");
+  Serial.println(gyroData.gyroY);
+  Serial.print(">gyroZ:");
+  Serial.println(gyroData.gyroZ);
   if (IMU.hasTemperature()) {
-	  Serial.print("\t");
+	  Serial.print(">imuTemp:");
 	  Serial.println(IMU.getTemp());
   }
-  Serial.print(F("Temperature = "));
-  Serial.print(bmp.readTemperature());
-  Serial.println(" *C");
+  Serial.print(">bmpTemp:");
+  Serial.println(bmp.readTemperature());
 
-  Serial.print(F("Pressure = "));
-  Serial.print(bmp.readPressure());
-  Serial.println(" Pa");
+  Serial.print(">bmpPressure:");
+  Serial.println(bmp.readPressure()/100);
 
-  Serial.print(F("Approx altitude = "));
-  Serial.print(bmp.readAltitude(1013.25));
-  Serial.println(" m");
+  Serial.print(">bmpAltitude:");
+  Serial.println(bmp.readAltitude(1013.25));
   delay(50);
+
+  ms.read();
+  Serial.print(">msTemp:");
+  Serial.println(ms.getTemperature());
+  Serial.print(">msPressure:");
+  Serial.println(ms.getPressure());
+  Serial.print(">msAltitude:");
+  Serial.println(ms.getAltitude(1013.25));
+
+  delay(50);
+
 }
