@@ -16,18 +16,22 @@ Adafruit_BMP280 bmp;
 #include <MS5611.h>
 MS5611 ms(0x77);
 
+//kalman
+#include <AutoKalman.h>
+AutoKalman2D kalman2D(0.5, 3.0, AutoKalman2D::Vector2D(0.0, 0.0), AutoKalman2D::Vector2D(0.0, 0.0));
+int prevTimeKalman = 0;
+
+
 //calibration datasets
 calData calib = { 0 };
 AccelData accelData;
 GyroData gyroData;
 
 void setup() {
-  //I2C, serial, housekeaping stuff
   Wire.begin();
   Wire.setClock(400000);
   Serial.begin(115200);
 
-  //IMU
   int imuErr = IMU.init(calib, IMU_ADDRESS);
 
   if (!DEBUG){
@@ -52,15 +56,13 @@ void setup() {
     IMU.init(calib, IMU_ADDRESS);
     };
 
-  //bmp
   bmp.begin(0x76);
-  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
-              Adafruit_BMP280::SAMPLING_X2,
-              Adafruit_BMP280::SAMPLING_X16,
-              Adafruit_BMP280::FILTER_X2,
-              Adafruit_BMP280::STANDBY_MS_500);
+    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
+                    Adafruit_BMP280::SAMPLING_NONE,
+                    Adafruit_BMP280::SAMPLING_NONE,
+                    Adafruit_BMP280::FILTER_OFF,
+                    Adafruit_BMP280::STANDBY_MS_1);
   
-  //ms
   ms.begin();
 }
 
@@ -92,7 +94,6 @@ void loop() {
 
   Serial.print(">bmpAltitude:");
   Serial.println(bmp.readAltitude(1013.25));
-  delay(50);
 
   ms.read();
   Serial.print(">msTemp:");
@@ -102,6 +103,22 @@ void loop() {
   Serial.print(">msAltitude:");
   Serial.println(ms.getAltitude(1013.25));
 
-  delay(50);
 
+  //kalman
+  float accelY = (accelData.accelY - 1)*9.80665;
+  float Alt = ms.getAltitude(1013.25);
+  float dt = (micros() - prevTimeKalman) / 1000000.0;
+  prevTimeKalman = micros();
+  AutoKalman2D::Vector2D measurement(Alt, 0.0);
+  AutoKalman2D::Vector2D result = kalman2D.filterPosition(measurement, dt);
+  Alt = result.x;
+
+
+  Serial.print(">KalmanAlt:");
+  Serial.println(Alt);
+  Serial.print(">KalmanVel:");
+  Serial.println(result.y);
+
+  Serial.println();
+  delay(100);
 }
