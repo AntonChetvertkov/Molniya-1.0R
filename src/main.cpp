@@ -2,6 +2,10 @@
 #include <Wire.h>
 int DEBUG = 1;
 
+//webserial
+#include "webserial.h"
+WebSerialClass WebSerial;
+
 //imu
 #include "FastIMU.h"
 #define IMU_ADDRESS 0x68
@@ -30,28 +34,28 @@ GyroData gyroData;
 void setup() {
   Wire.begin();
   Wire.setClock(400000);
-  Serial.begin(115200);
+  WebSerial.begin("Z");
 
   int imuErr = IMU.init(calib, IMU_ADDRESS);
 
   if (!DEBUG){
-    Serial.println("FastIMU calibration & data example");
-    Serial.println("Keep IMU level.");
+    WebSerial.println("FastIMU calibration & data example");
+    WebSerial.println("Keep IMU level.");
     delay(5000);
     IMU.calibrateAccelGyro(&calib);
-    Serial.println("Calibration done!");
-    Serial.println("Accel biases X/Y/Z: ");
-    Serial.print(calib.accelBias[0]);
-    Serial.print(", ");
-    Serial.print(calib.accelBias[1]);
-    Serial.print(", ");
-    Serial.println(calib.accelBias[2]);
-    Serial.println("Gyro biases X/Y/Z: ");
-    Serial.print(calib.gyroBias[0]);
-    Serial.print(", ");
-    Serial.print(calib.gyroBias[1]);
-    Serial.print(", ");
-    Serial.println(calib.gyroBias[2]);
+    WebSerial.println("Calibration done!");
+    WebSerial.println("Accel biases X/Y/Z: ");
+    WebSerial.print(calib.accelBias[0]);
+    WebSerial.print(", ");
+    WebSerial.print(calib.accelBias[1]);
+    WebSerial.print(", ");
+    WebSerial.println(calib.accelBias[2]);
+    WebSerial.println("Gyro biases X/Y/Z: ");
+    WebSerial.print(calib.gyroBias[0]);
+    WebSerial.print(", ");
+    WebSerial.print(calib.gyroBias[1]);
+    WebSerial.print(", ");
+    WebSerial.println(calib.gyroBias[2]);
     delay(5000);
     IMU.init(calib, IMU_ADDRESS);
     };
@@ -67,41 +71,42 @@ void setup() {
 }
 
 void loop() {
+  WebSerial.loop();
   IMU.update();
   IMU.getAccel(&accelData);
-  Serial.print(">accelX:");
-  Serial.println(accelData.accelX);
-  Serial.print(">accelY:");
-  Serial.println(accelData.accelY);
-  Serial.print(">accelZ:");
-  Serial.println(accelData.accelZ);
+  WebSerial.print(">accelX:");
+  WebSerial.println(accelData.accelX);
+  WebSerial.print(">accelY:");
+  WebSerial.println(accelData.accelY);
+  WebSerial.print(">accelZ:");
+  WebSerial.println(accelData.accelZ);
   IMU.getGyro(&gyroData);
-  Serial.print(">gyroX:");
-  Serial.println(gyroData.gyroX);
-  Serial.print(">gyroY:");
-  Serial.println(gyroData.gyroY);
-  Serial.print(">gyroZ:");
-  Serial.println(gyroData.gyroZ);
+  WebSerial.print(">gyroX:");
+  WebSerial.println(gyroData.gyroX);
+  WebSerial.print(">gyroY:");
+  WebSerial.println(gyroData.gyroY);
+  WebSerial.print(">gyroZ:");
+  WebSerial.println(gyroData.gyroZ);
   if (IMU.hasTemperature()) {
-	  Serial.print(">imuTemp:");
-	  Serial.println(IMU.getTemp());
+	  WebSerial.print(">imuTemp:");
+	  WebSerial.println(IMU.getTemp());
   }
-  Serial.print(">bmpTemp:");
-  Serial.println(bmp.readTemperature());
+  WebSerial.print(">bmpTemp:");
+  WebSerial.println(bmp.readTemperature());
 
-  Serial.print(">bmpPressure:");
-  Serial.println(bmp.readPressure()/100);
+  WebSerial.print(">bmpPressure:");
+  WebSerial.println(bmp.readPressure()/100);
 
-  Serial.print(">bmpAltitude:");
-  Serial.println(bmp.readAltitude(1013.25));
+  WebSerial.print(">bmpAltitude:");
+  WebSerial.println(bmp.readAltitude(1013.25));
 
   ms.read();
-  Serial.print(">msTemp:");
-  Serial.println(ms.getTemperature());
-  Serial.print(">msPressure:");
-  Serial.println(ms.getPressure());
-  Serial.print(">msAltitude:");
-  Serial.println(ms.getAltitude(1013.25));
+  WebSerial.print(">msTemp:");
+  WebSerial.println(ms.getTemperature());
+  WebSerial.print(">msPressure:");
+  WebSerial.println(ms.getPressure());
+  WebSerial.print(">msAltitude:");
+  WebSerial.println(ms.getAltitude(1013.25));
 
 
   //kalman
@@ -114,11 +119,11 @@ void loop() {
   Alt = result.x;
 
 
-  Serial.print(">KalmanAlt:");
-  Serial.println(Alt);
-  Serial.print(">KalmanVel:");
-  Serial.println(result.y);
+  WebSerial.print(">KalmanAlt:");
+  WebSerial.println(Alt);
+  WebSerial.print(">KalmanVel:");
+  WebSerial.println(result.y);
 
-  Serial.println();
+  WebSerial.println();
   delay(100);
 }
